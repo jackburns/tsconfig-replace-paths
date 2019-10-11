@@ -1,5 +1,3 @@
-import { dirname, resolve } from 'path';
-
 /*
 "baseUrl": ".",
 "outDir": "lib",
@@ -63,7 +61,7 @@ export const loadConfig = (file: string): ITSConfig => {
   }
 
   if (ext) {
-    const parentConfig = loadConfig(resolve(dirname(file), ext));
+    const parentConfig = loadConfig(ext);
     return {
       ...parentConfig,
       ...config,
