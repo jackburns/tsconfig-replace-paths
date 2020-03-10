@@ -11,10 +11,11 @@ program
     .option('-p, --project <file>', 'path to tsconfig.json')
     .option('-s, --src <path>', 'source root path')
     .option('-o, --out <path>', 'output root path')
-    .option('-v, --verbose', 'output logs');
+    .option('-v, --verbose', 'output logs')
+    .option('-q, --quiet', 'minimal logs');
 program.on('--help', () => {
     console.log(`
-  $ tscpath -p tsconfig.json
+  $ tsconfig-replace-paths -p tsconfig.json
 `);
 });
 program.parse(process.argv);
@@ -22,13 +23,19 @@ const { project, src: flagSrc, out: flagOut, verbose = false } = program;
 if (!project) {
     throw new Error('--project must be specified');
 }
+const quiet = verbose || program.quiet;
 const verboseLog = (...args) => {
     if (verbose) {
         console.log(...args);
     }
 };
+const quietableLog = (...args) => {
+    if (!quiet) {
+        console.log(...args);
+    }
+};
 const configFile = path_1.resolve(process.cwd(), project);
-console.log(`Using tsconfig: ${configFile}`);
+quietableLog(`Using tsconfig: ${configFile}`);
 const exitingErr = () => {
     throw new Error('--- exiting tsconfig-replace-paths due to parameters missing ---');
 };
@@ -50,30 +57,30 @@ if (!flagOut && tsConfigOutDir === '') {
 }
 let usingSrcDir;
 if (flagSrc) {
-    console.log('Using flag --src');
+    quietableLog('Using flag --src');
     usingSrcDir = path_1.resolve(flagSrc);
 }
 else {
-    console.log('Using compilerOptions.rootDir from your tsconfig');
+    quietableLog('Using compilerOptions.rootDir from your tsconfig');
     usingSrcDir = path_1.resolve(tsConfigRootDir);
 }
 if (!usingSrcDir) {
     missingDirectoryErr('rootDir', '--src');
 }
-console.log(`Using src: ${usingSrcDir}`);
+quietableLog(`Using src: ${usingSrcDir}`);
 let usingOutDir;
 if (flagOut) {
-    console.log('Using flag --out');
+    quietableLog('Using flag --out');
     usingOutDir = path_1.resolve(flagOut);
 }
 else {
-    console.log('Using compilerOptions.outDir from your tsconfig');
+    quietableLog('Using compilerOptions.outDir from your tsconfig');
     usingOutDir = path_1.resolve(tsConfigOutDir);
 }
 if (!usingOutDir) {
     missingDirectoryErr('outDir', '--out');
 }
-console.log(`Using out: ${usingOutDir}`);
+quietableLog(`Using out: ${usingOutDir}`);
 if (!baseUrl) {
     throw new Error('compilerOptions.baseUrl is not set');
 }

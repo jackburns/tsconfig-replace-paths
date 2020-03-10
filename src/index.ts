@@ -11,11 +11,12 @@ program
   .option('-p, --project <file>', 'path to tsconfig.json')
   .option('-s, --src <path>', 'source root path')
   .option('-o, --out <path>', 'output root path')
-  .option('-v, --verbose', 'output logs');
+  .option('-v, --verbose', 'output logs')
+  .option('-q, --quiet', 'minimal logs');
 
 program.on('--help', () => {
   console.log(`
-  $ tscpath -p tsconfig.json
+  $ tsconfig-replace-paths -p tsconfig.json
 `);
 });
 
@@ -26,11 +27,14 @@ const { project, src: flagSrc, out: flagOut, verbose = false } = program as {
   src?: string | undefined;
   out?: string | undefined;
   verbose?: boolean;
+  quiet?: boolean;
 };
 
 if (!project) {
   throw new Error('--project must be specified');
 }
+
+const quiet = verbose || program.quiet;
 
 const verboseLog = (...args: any[]): void => {
   if (verbose) {
@@ -38,9 +42,15 @@ const verboseLog = (...args: any[]): void => {
   }
 };
 
+const quietableLog = (...args: any[]): void => {
+  if (!quiet) {
+    console.log(...args);
+  }
+};
+
 const configFile = resolve(process.cwd(), project);
 
-console.log(`Using tsconfig: ${configFile}`);
+quietableLog(`Using tsconfig: ${configFile}`);
 
 const exitingErr = (): any => {
   throw new Error(
@@ -86,10 +96,10 @@ if (!flagOut && tsConfigOutDir === '') {
 // Are we going to use the flag or ts config for src?
 let usingSrcDir: string;
 if (flagSrc) {
-  console.log('Using flag --src');
+  quietableLog('Using flag --src');
   usingSrcDir = resolve(flagSrc);
 } else {
-  console.log('Using compilerOptions.rootDir from your tsconfig');
+  quietableLog('Using compilerOptions.rootDir from your tsconfig');
   usingSrcDir = resolve(tsConfigRootDir);
 }
 if (!usingSrcDir) {
@@ -97,15 +107,15 @@ if (!usingSrcDir) {
 }
 
 // Log which src is being used
-console.log(`Using src: ${usingSrcDir}`);
+quietableLog(`Using src: ${usingSrcDir}`);
 
 // Are we going to use the flag or ts config for out?
 let usingOutDir: string;
 if (flagOut) {
-  console.log('Using flag --out');
+  quietableLog('Using flag --out');
   usingOutDir = resolve(flagOut);
 } else {
-  console.log('Using compilerOptions.outDir from your tsconfig');
+  quietableLog('Using compilerOptions.outDir from your tsconfig');
   usingOutDir = resolve(tsConfigOutDir);
 }
 if (!usingOutDir) {
@@ -113,7 +123,7 @@ if (!usingOutDir) {
 }
 
 // Log which out is being used
-console.log(`Using out: ${usingOutDir}`);
+quietableLog(`Using out: ${usingOutDir}`);
 
 if (!baseUrl) {
   throw new Error('compilerOptions.baseUrl is not set');
